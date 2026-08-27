@@ -22,7 +22,7 @@ ENV PORT=3000
 
 # Copy standalone output from Build
 COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/public ./public 2>/dev/null || true
 
 EXPOSE 3000
 
