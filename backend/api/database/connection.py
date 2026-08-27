@@ -98,8 +98,7 @@ def _load_csv_data() -> None:
                COALESCE(MIN(NULLIF(category_title, '')), 'Unknown Merchant')
         FROM _csv_staging
         GROUP BY merchant_key
-        ON CONFLICT (merchant_key) DO UPDATE
-            SET name = EXCLUDED.name
+        ON CONFLICT (merchant_key) DO NOTHING
     """)
 
     # Populate sessions table from CSV data
@@ -117,10 +116,8 @@ def _load_csv_data() -> None:
             session_key::VARCHAR,
             merchant_key,
             CASE
-                WHEN session_status = 'Verified' THEN 'SUCCESS'
-                WHEN session_status = 'Failed' THEN 'FAILED'
-                WHEN session_status = 'Paid' THEN 'SUCCESS'
-                WHEN session_status = 'Reversed' THEN 'FAILED'
+                WHEN session_status IN ('Verified', 'Paid') THEN 'SUCCESS'
+                WHEN session_status IN ('Failed', 'Reversed') THEN 'FAILED'
                 ELSE session_status
             END,
             amount::BIGINT,
