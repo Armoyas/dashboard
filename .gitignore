@@ -1,54 +1,24 @@
-# .gitignore
-
 # Dependencies
 node_modules/
-*.egg-info/
-.eggs/
-
-# Build outputs
-.next/
-.nuxt/
-dist/
-build/
-.out/
-
-# Environment
-.env
-.env.local
-.env.development
-.env.production
-.env*.local
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-.Python
-.mypy_cache/
-.ruff_cache/
-.pytest_cache/
+.venv/
+venv/
 
-# Coverage
-.coverage
-.coverage.*
-htmlcov/
-
-# IDE
-.idea/
+# IDEs
 .vscode/
+.idea/
 *.swp
-*.swo
-*~
+.DS_Store
 
-# Logs
-*.log
-logs/
-tmp/
+# Build
+.next/
+dist/
+build/
 
 # Docker
-docker-compose.override.yml
+*.pid
+*.log
+
+# Data
+*.duckdb

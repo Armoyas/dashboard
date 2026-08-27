@@ -1,73 +1,62 @@
-# Dashboard
+# Dashboard - ZarrinPal Analytics
 
-A spec-driven development (SDD) dashboard application for ZarrinPal payment analytics, built upon the architectural patterns from [Armoyas/analytical-dashboard](https://github.com/Armoyas/analytical-dashboard).
+An analytical dashboard for ZarrinPal payment data, built using Spec-Driven Development (SDD) methodology.
 
-## Methodology
+## Quick Start
 
-This project follows the **Spec-Driven Development (SDD)** methodology using the **Speckit** approach. All specifications are defined in the `specs/` directory before implementation.
-
-### Spec Structure
-
+```bash
+git clone https://github.com/Armoyas/dashboard.git
+cd dashboard
+docker compose build --no-cache
+docker compose up -d
 ```
-specs/
-└── stage0/
-    ├── README.md           # Stage 0 overview
-    ├── constitution.md     # Project constitution
-    ├── requirements.md     # Functional & non-functional requirements
-    ├── architecture.md     # High-level architecture
-    └── api-contract.md     # API endpoint definitions
-```
+
+Access the dashboard at: http://62.60.198.209/
 
 ## Architecture
 
 ```
-Internet → Nginx (80) → Next.js Frontend (3000) / FastAPI API (8000) → DuckDB
+Client
+  ↓
+Nginx (port 80)
+  ↓
+Next.js (port 3000)   FastAPI (port 8000)
+  ↓
+DuckDB
 ```
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| Reverse Proxy | Nginx 1.31.4 | Routing & static assets |
-| Frontend | Next.js 15.1.3 | Dashboard UI |
-| Backend | FastAPI | Analytics API |
-| Database | DuckDB | ZarrinPal transaction data |
-
-## Getting Started
-
-### Prerequisites
-
-- Docker & Docker Compose
-- Git
-
-### Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/Armoyas/dashboard.git
-cd dashboard
-
-# Review Stage 0 specifications
-ls specs/stage0/
-
-# Build and run (after Stage 1 implementation)
-docker compose up --build
-```
+- **Frontend**: Next.js 15.1.3 with standalone build
+- **Backend**: FastAPI + uvicorn
+- **Database**: DuckDB
+- **Infra**: Docker Compose + Nginx
 
 ## Data Schema
 
-The dashboard uses the ZarrinPal analytics schema:
+| Table | Columns |
+|-------|---------|
+| merchants | merchant_key (PK), name, created_at |
+| sessions | id (PK), merchant_key, session_status, amount (Rials), adjusted_fee |
+| transactions | id (PK), session_id, status, amount, fee |
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `merchant_key` | string | Unique merchant identifier |
-| `session_status` | string | Payment session status |
-| `amount` | integer | Transaction amount in IRR (Rials) | 
-| `adjusted_fee` | integer | Adjusted fee amount |
+## Specifications
 
-## Reference
+This project follows SDD methodology with specifications in `/specs/`:
 
-- **Reference Repository**: [Armoyas/analytical-dashboard](https://github.com/Armoyas/analytical-dashboard)
-- **Deployment**: Host 62.60.198.209 (ports 80, 3000, 8000)
+- **Stage 0**: High-level requirements and architecture
+- **Stage 1**: Detailed component specs and API contracts
+
+See [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) for full details.
+
+## Testing
+
+```bash
+# Backend
+cd api && pytest tests/
+
+# Frontend
+cd next-app && npm test
+```
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file.
+MIT
