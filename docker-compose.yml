@@ -34,9 +34,11 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./data:/app/data
+      - ./database:/app/database
+      - ./database/schema.sql:/app/database/schema.sql
     environment:
-      - DATABASE_PATH=/app/data/analytics.duckdb
+      - DATABASE_PATH=/app/database/analytics.duckdb
+      - SCHEMA_PATH=/app/database/schema.sql
     restart: unless-stopped
     networks:
       - dashboard-network

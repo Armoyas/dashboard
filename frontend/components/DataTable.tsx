@@ -1,6 +1,3 @@
----
-filename: components/DataTable.tsx
----
 import React from 'react';
 
 interface Session {

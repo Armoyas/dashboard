@@ -1,6 +1,3 @@
----
-filename: app/dashboard/page.tsx
----
 import { MerchantSelector } from '@/components/MerchantSelector';
 import { AnalyticsChart } from '@/components/AnalyticsChart';
 import { DataTable } from '@/components/DataTable';

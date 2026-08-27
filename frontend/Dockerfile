@@ -9,6 +9,7 @@ RUN npm ci
 
 COPY . .
 
+# Build with standalone output (required for Docker deployment)
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -16,16 +17,16 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/.next ./.next
+# Copy standalone output from Build
+COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/next.config.mjs ./
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-CMD ["npm", "start", "-p", "3000"]
+CMD ["node", "server.js"]

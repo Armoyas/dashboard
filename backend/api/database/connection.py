@@ -1,19 +1,73 @@
 """Database connection management for DuckDB"""
-
 import duckdb
-from typing import Optional
+from typing import Optional, Generator
 import os
+from pathlib import Path
 
-# Default database path
-DATABASE_PATH = os.getenv("DATABASE_PATH", "/app/data/analytics.duckdb")
+# Default database path - mounted as volume in docker-compose
+DATABASE_PATH = os.getenv("DATABASE_PATH", "/app/database/analytics.duckdb")
+SCHEMA_PATH = os.getenv("SCHEMA_PATH", "/app/database/schema.sql")
+
+_connection: Optional[duckdb.DuckDBPyConnection] = None
 
 
 def get_connection() -> duckdb.DuckDBPyConnection:
-    """Get a DuckDB database connection"""
-    return duckdb.connect(DATABASE_PATH)
+    """Get or create the singleton DuckDB connection."""
+    global _connection
+    if _connection is None:
+        Path(DATABASE_PATH).parent.mkdir(parents=True, exist_ok=True)
+        _connection = duckdb.connect(database=DATABASE_PATH, read_only=False)
+        _init_schema()
+    return _connection
+
+
+def _init_schema() -> None:
+    """Apply the SQL schema script if the database is empty."""
+    if _connection is None:
+        return
+    # Check if tables already exist
+    tables = _connection.execute(
+        "SELECT table_name FROM information_schema.tables "
+        "WHERE table_schema = 'main'"
+    ).fetchall()
+    if tables:
+        return  # schema already applied
+    schema_file = Path(SCHEMA_PATH)
+    if schema_file.exists():
+        _connection.execute(schema_file.read_text())
+        _connection.commit()
+        # Insert sample data
+        _insert_sample_data()
+
+
+def _insert_sample_data() -> None:
+    """Insert sample data for testing and demonstration."""
+    _connection.execute("""
+        INSERT INTO merchants (merchant_key, name) VALUES
+            ('test_merchant_001', 'Test Merchant One'),
+            ('test_merchant_002', 'Test Merchant Two')
+        ON CONFLICT (merchant_key) DO NOTHING;
+    """)
+    _connection.execute("""
+        INSERT INTO sessions (id, merchant_key, session_status, amount, adjusted_fee, authority, email, mobile) VALUES
+            ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'test_merchant_001', 'SUCCESS', 500000, 15000, 'auth123', 'user1@test.com', '09120000001'),
+            ('b2c3d4e5-f6a7-8901-bcde-f1234567890', 'test_merchant_002', 'FAILED', 300000, 9000, 'auth456', 'user2@test.com', '09120000002'),
+            ('c3d4e5f6-a7b8-9012-cdef-12345678901', 'test_merchant_001', 'SUCCESS', 750000, 22500, 'auth789', 'user3@test.com', '09120000003')
+        ON CONFLICT (id) DO NOTHING;
+    """)
+    _connection.commit()
 
 
 def get_db_connection():
-    """Get a database connection (compatible with dependency injection)"""
-    conn = get_connection()
-    return conn
+    """Get a database connection (dependency injection compatible).
+    Returns the singleton connection - do NOT close it in routes.
+    """
+    return get_connection()
+
+
+def close_connection():
+    """Close the database connection (called on shutdown)."""
+    global _connection
+    if _connection is not None:
+        _connection.close()
+        _connection = None

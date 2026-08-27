@@ -17,15 +17,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
 COPY ./api /app/api
-COPY ./data /app/data
+COPY ./database /app/database
 
-# Create data directory if it doesn't exist
-RUN mkdir -p /app/data
+# Expose port
+EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD python -c "import requests; requests.get('http://localhost:8000/api/health')"
-
-EXPOSE 8000
+  CMD python -c "from api.database.connection import get_connection; get_connection()"
 
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

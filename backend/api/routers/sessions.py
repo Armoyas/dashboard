@@ -2,7 +2,6 @@
 Sessions API router
 Handles payment session endpoints
 """
-
 from fastapi import APIRouter, HTTPException, Query
 from typing import List
 from api.database.connection import get_db_connection
@@ -14,19 +13,18 @@ router = APIRouter(tags=["sessions"])
 async def list_sessions(limit: int = 100, offset: int = 0):
     """
     List payment sessions
-    
+
     Returns a paginated list of payment sessions with optional filtering.
     """
     try:
         conn = get_db_connection()
         sessions = conn.execute("""
-            SELECT id, merchant_key, session_status, amount, adjusted_fee, created_at 
-            FROM sessions 
-            ORDER BY created_at DESC 
+            SELECT id, merchant_key, session_status, amount, adjusted_fee, created_at
+            FROM sessions
+            ORDER BY created_at DESC
             LIMIT ? OFFSET ?
         """, [limit, offset]).fetchall()
-        conn.close()
-        
+
         return {
             "sessions": [
                 {
@@ -48,22 +46,21 @@ async def list_sessions(limit: int = 100, offset: int = 0):
 async def get_session(session_id: str):
     """
     Get a specific session by ID
-    
+
     Returns detailed information about a specific payment session.
     """
     try:
         conn = get_db_connection()
         session = conn.execute("""
-            SELECT id, merchant_key, session_status, amount, adjusted_fee, 
+            SELECT id, merchant_key, session_status, amount, adjusted_fee,
                    authority, email, mobile, created_at, updated_at
-            FROM sessions 
+            FROM sessions
             WHERE id = ?
         """, [session_id]).fetchone()
-        conn.close()
-        
+
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
-        
+
         return {
             "id": session[0],
             "merchant_key": session[1],

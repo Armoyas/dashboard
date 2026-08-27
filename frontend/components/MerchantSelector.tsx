@@ -1,6 +1,3 @@
----
-filename: components/MerchantSelector.tsx
----
 import { useState } from 'react';
 
 interface Merchant {
