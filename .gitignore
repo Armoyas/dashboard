@@ -1,0 +1,54 @@
+# .gitignore
+
+# Dependencies
+node_modules/
+*.egg-info/
+.eggs/
+
+# Build outputs
+.next/
+.nuxt/
+dist/
+build/
+.out/
+
+# Environment
+.env
+.env.local
+.env.development
+.env.production
+.env*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+tmp/
+
+# Docker
+docker-compose.override.yml
