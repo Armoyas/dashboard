@@ -1,0 +1,42 @@
+# Root-level .dockerignore for backend build context (context: .)
+# Used by backend Dockerfile build (docker-compose: context: .)
+
+# Exclude frontend build artifacts and node_modules (not needed for backend)
+frontend/node_modules
+frontend/.next
+frontend/.git
+frontend/.gitignore
+frontend/ Dockerfile
+frontend/*.md
+frontend/LICENSE
+frontend/.DS_Store
+
+# Exclude backend internal dockerignore (not needed in build context)
+backend/.dockerignore
+
+# Exclude database runtime files (mounted at runtime via volume)
+database/*.duckdb
+
+# Exclude git
+.git
+.gitignore
+.gitattributes
+
+# Exclude IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Exclude OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V1000
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Exclude docs (already in backend/.dockerignore but just in case)
+*.md
+LICENSE

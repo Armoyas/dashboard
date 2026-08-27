@@ -5,7 +5,6 @@ import { useState } from 'react';
 interface Merchant {
   merchant_key: string;
   name: string;
-  created_at: string;
 }
 
 interface MerchantSelectorProps {
