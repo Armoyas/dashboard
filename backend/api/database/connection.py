@@ -11,27 +11,30 @@ from pathlib import Path
 
 # --- Configuration --------------------------------------------------------
 
+# Detect environment: in Docker, /app/database/schema.sql exists (mounted or copied).
+_IN_DOCKER = Path("/app/database/schema.sql").exists()
+
 # Path to the DuckDB database file
 DATABASE_PATH = os.getenv("DATABASE_PATH")
 if not DATABASE_PATH:
-    docker_path = "/app/database/analytics.duckdb"
-    local_path = str(Path(__file__).resolve().parents[4] / "backend/database/analytics.duckdb")
-    DATABASE_PATH = docker_path if Path("/app").exists() else local_path
+    DATABASE_PATH = "/app/database/analytics.duckdb" if _IN_DOCKER else str(
+        Path(__file__).resolve().parents[3] / "database/analytics.duckdb"
+    )
 
 # Path to the SQL schema file
 SCHEMA_PATH = os.getenv("SCHEMA_PATH")
 if not SCHEMA_PATH:
-    docker_path = "/app/database/schema.sql"
-    local_path = str(Path(__file__).resolve().parents[4] / "database/schema.sql")
-    SCHEMA_PATH = docker_path if Path("/app").exists() else local_path
+    SCHEMA_PATH = "/app/database/schema.sql" if _IN_DOCKER else str(
+        Path(__file__).resolve().parents[3] / "database/schema.sql"
+    )
 
 # Path to the input CSV data file.
 # In Docker the CSV is mounted at /app/data/sample_data.csv (see docker-compose).
 DATA_FILE = os.getenv("DATA_FILE")
 if not DATA_FILE:
-    docker_path = "/app/data/sample_data.csv"
-    local_path = str(Path(__file__).resolve().parents[4] / "data/sample_data.csv")
-    DATA_FILE = docker_path if Path("/app").exists() else local_path
+    DATA_FILE = "/app/data/sample_data.csv" if _IN_DOCKER else str(
+        Path(__file__).resolve().parents[3] / "data/sample_data.csv"
+    )
 
 _connection: Optional[duckdb.DuckDBPyConnection] = None
 
