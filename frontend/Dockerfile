@@ -1,32 +1,47 @@
-# syntax=docker/dockerfile:1
+# Frontend Dockerfile for Next.js 15 Dashboard
+# Multi-stage build with standalone output
 
-FROM node:20-alpine AS builder
+# ---- Base Stage ----
+FROM node:20-alpine AS base
+WORKDIR /app
+ENV NODE_ENV=production
 
+# ---- Builder Stage ----
+FROM base AS builder
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
-RUN npm install
 
+# Install dependencies (use --legacy-peer-deps for compatibility)
+RUN npm install --legacy-peer-deps
+
+# Copy source code
 COPY . .
 
-# Build with standalone output (required for Docker deployment)
+# Build Next.js app with standalone output
 RUN npm run build
 
+# ---- Runner Stage ----
 FROM node:20-alpine AS runner
-
 WORKDIR /app
 
+# Set NODE_ENV
 ENV NODE_ENV=production
-ENV HOSTNAME=0.0.0.0
+ENV NODE_PORT=3000
 ENV PORT=3000
 
-# Copy standalone output from Build
+# Copy standalone build
 COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/public ./public 2>/dev/null || true
+COPY --from=builder /app/.next/static ./public/_next/static
+COPY --from=builder /app/public ./public
 
+# Expose port
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
+# Start the app
 CMD ["node", "server.js"]
