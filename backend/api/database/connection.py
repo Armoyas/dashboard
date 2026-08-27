@@ -4,9 +4,19 @@ from typing import Optional, Generator
 import os
 from pathlib import Path
 
-# Default database path - mounted as volume in docker-compose
-DATABASE_PATH = os.getenv("DATABASE_PATH", "/app/database/analytics.duckdb")
-SCHEMA_PATH = os.getenv("SCHEMA_PATH", "/app/database/schema.sql")
+# Default database paths - works in Docker and locally
+DATABASE_PATH = os.getenv("DATABASE_PATH")
+if not DATABASE_PATH:
+    # Try Docker path first, fall back to local project path
+    docker_path = "/app/database/analytics.duckdb"
+    local_path = str(Path(__file__).resolve().parents[3] / "database/analytics.duckdb")
+    DATABASE_PATH = docker_path if Path(docker_path).parent.exists() else local_path
+
+SCHEMA_PATH = os.getenv("SCHEMA_PATH")
+if not SCHEMA_PATH:
+    docker_path = "/app/database/schema.sql"
+    local_path = str(Path(__file__).resolve().parents[3] / "database/schema.sql")
+    SCHEMA_PATH = docker_path if Path(docker_path).exists() else local_path
 
 _connection: Optional[duckdb.DuckDBPyConnection] = None
 

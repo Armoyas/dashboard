@@ -1,18 +1,28 @@
-import { MerchantSelector } from '@/components/MerchantSelector';
+'use client';
+
+import { useState, useEffect } from 'react';
+import MerchantSelector from '@/components/MerchantSelector';
 import { AnalyticsChart } from '@/components/AnalyticsChart';
 import { DataTable } from '@/components/DataTable';
 
-export const dynamic = 'force-dynamic';
+export default function DashboardPage() {
+  const [merchants, setMerchants] = useState<any>({ merchants: [] });
+  const [overview, setOverview] = useState<any>(null);
 
-export default async function DashboardPage() {
-  // Fetch merchants with null-safety
-  const merchantsRes = await fetch('/api/merchants');
-  const merchants = merchantsRes.ok ? await merchantsRes.json() : { merchants: [] };
-  
-  // Fetch analytics overview
-  const overviewRes = await fetch('/api/analytics/overview');
-  const overview = overviewRes.ok ? await overviewRes.json() : null;
-  
+  useEffect(() => {
+    // Fetch merchants (client-side, after page load)
+    fetch('/api/merchants')
+      .then(res => res.ok ? res.json() : { merchants: [] })
+      .then(data => setMerchants(data))
+      .catch(() => setMerchants({ merchants: [] }));
+
+    // Fetch analytics overview
+    fetch('/api/analytics/overview')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => setOverview(data))
+      .catch(() => setOverview(null));
+  }, []);
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">داشبورد تحلیلی</h1>

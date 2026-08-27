@@ -1,3 +1,4 @@
+'use client'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface AnalyticsData {
