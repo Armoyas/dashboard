@@ -20,37 +20,49 @@ Components:
 
 ### Structure
 ```
-next-app/
-├── pages/            # Legacy pages (if needed)
-├── app/              # App Router (Next.js 13+)
-│   ├── dashboard/
-│   │   └── page.tsx   # Main dashboard view
-│   ├── layout.tsx     # Root layout
-│   └── page.tsx       # Landing page
+frontend/
+├── Dockerfile
+├── package.json
+├── next.config.js
+├── tailwind.config.js
+├── styles/
+│   └── globals.css
+├── app/
+│   ├── layout.tsx     # Root layout (RTL, Persian)
+│   ├── page.tsx       # Landing page
+│   └── dashboard/
+│       └── page.tsx   # Main dashboard view
 ├── components/
 │   ├── MerchantSelector.tsx
 │   ├── AnalyticsChart.tsx
 │   └── DataTable.tsx
-├── public/
-└── styles/
+└── public/
+    └── fonts/
+        └── Vazirmatn.woff2
 ```
 
 ### Configuration
 - `next.config.js`:
   - `output: 'standalone'` for Docker deployment
-  - `experimental: { appDir: true }`
-  - `trailingSlash: true`
+  - `reactStrictMode: true`
+  - `trailingSlash: false` (default)
+  - `swcMinify: true`
+  - API rewrites to backend
 
 ### Dependencies
-- React 18+
+- React 19 (via Next.js 15)
 - TypeScript
-- TailwindCSS for styling
-- Chart.js / Recharts for visualizations
+- TailwindCSS v3.4 for styling
+- Recharts for visualizations
+- clsx for conditional classnames
+- dayjs for date formatting
+- @headlessui/react for UI components
 
 ### Known Constraints
 - Use `force-dynamic` in page rendering to prevent prerendering issues
 - Apply null-safety patterns: `(merchants || []).find(m => m.id === selectedId)`
-- Handle RTL (Persian) support with `next/font/local` or similar
+- Handle RTL (Persian) support with `dir="rtl"` on html element
+- Use Vazirmatn font via TailwindCSS configuration
 
 ---
 
@@ -58,22 +70,25 @@ next-app/
 
 ### Structure
 ```
-api/
-├── main.py             # FastAPI app entry point
-├── routers/
-│   ├── merchants.py    # Merchant-related endpoints
-│   ├── analytics.py    # Analytics/data endpoints
-│   └── sessions.py     # Payment session endpoints
-├── models/
-│   └── schemas.py      # Pydantic models
-├── database/
-│   ├── connection.py   # DuckDB connection management
-│   └── queries.py      # Pre-defined SQL queries
-├── services/
-│   └── zarrinpal.py    # ZarrinPal-specific logic
-└── utils/
-    ├── security.py     # Auth/validation
-    └── helpers.py      # Utility functions
+backend/
+├── Dockerfile
+├── requirements.txt
+├── api/
+│   ├── main.py             # FastAPI app entry point
+│   ├── routers/
+│   │   ├── merchants.py    # Merchant-related endpoints
+│   │   ├── analytics.py    # Analytics/data endpoints
+│   │   └── sessions.py     # Payment session endpoints
+│   ├── models/
+│   │   └── schemas.py      # Pydantic models
+│   ├── database/
+│   │   ├── connection.py   # DuckDB connection management
+│   │   └── queries.py      # Pre-defined SQL queries
+│   ├── services/
+│   │   └── zarrinpal.py    # ZarrinPal-specific logic
+│   └── utils/
+│       ├── security.py     # Auth/validation
+│       └── helpers.py      # Utility functions
 ```
 
 ### Endpoints
@@ -84,16 +99,20 @@ api/
 | GET | `/api/analytics/overview` | Dashboard overview stats |
 | GET | `/api/analytics/merchant/{merchant_key}` | Per-merchant analytics |
 | GET | `/api/sessions` | List payment sessions |
+| GET | `/api/sessions/{session_id}` | Get specific session |
 
 ### Dependencies
-- FastAPI 0.100+
-- DuckDB adapter for Python
-- Pydantic for data validation
-- Uvicorn as ASGI server
+- FastAPI 0.115.0
+- uvicorn 0.30.6 (ASGI server)
+- DuckDB 1.1.0 (analytical database)
+- Pydantic 2.9.2 (data validation)
+- SQLAlchemy 2.0.35 (ORM)
+- pydantic-settings 2.5.2
 
 ### Configuration
-- Run with: `uvicorn main:app --host 0.0.0.0 --port 8000`
-- Database path: `./data/analytics.duckdb`
+- Run with: `uvicorn api.main:app --host 0.0.0.0 --port 8000`
+- Database path: `/app/data/analytics.duckdb`
+- CORS middleware enabled for all origins
 
 ---
 
@@ -104,7 +123,7 @@ api/
 ```sql
 CREATE TABLE merchants (
     merchant_key VARCHAR PRIMARY KEY,
-    name VARCHAR,
+    name VARCHAR NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
@@ -114,7 +133,7 @@ CREATE TABLE merchants (
 CREATE TABLE sessions (
     id UUID PRIMARY KEY,
     merchant_key VARCHAR REFERENCES merchants(merchant_key),
-    session_status VARCHAR,
+    session_status VARCHAR NOT NULL,
     amount BIGINT, -- In Rials (IRR)
     adjusted_fee BIGINT, -- Processing fee
     authority VARCHAR,
@@ -156,7 +175,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - frontend
       - backend
@@ -164,47 +183,44 @@ services:
 
   frontend:
     build:
-      context: ./next-app
+      context: ./frontend
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://backend:8000/api
     restart: unless-stopped
 
   backend:
     build:
-      context: ./api
+      context: ./backend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
       - ./data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/analytics.duckdb
     restart: unless-stopped
 ```
 
 ### Nginx Configuration
 ```nginx
 events { }
+
 http {
     upstream frontend { server frontend:3000; }
     upstream backend { server backend:8000; }
-
+    
     server {
         listen 80;
         
         location / {
             proxy_pass http://frontend;
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
-
+        
         location /api/ {
             proxy_pass http://backend;
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        }
-
-        location /docs/ {
-            proxy_pass http://backend/docs/;
         }
     }
 }

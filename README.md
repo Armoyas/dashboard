@@ -1,6 +1,6 @@
-# Dashboard - ZarrinPal Analytics
+# ZarrinPal Analytics Dashboard
 
-An analytical dashboard for ZarrinPal payment data, built using Spec-Driven Development (SDD) methodology.
+Analytical dashboard for ZarrinPal payment data, built using Spec-Driven Development (SDD) methodology.
 
 ## Quick Start
 
@@ -11,7 +11,7 @@ docker compose build --no-cache
 docker compose up -d
 ```
 
-Access the dashboard at: http://62.60.198.209/
+Access the dashboard at: http://localhost:3000/
 
 ## Architecture
 
@@ -26,37 +26,40 @@ DuckDB
 ```
 
 - **Frontend**: Next.js 15.1.3 with standalone build
-- **Backend**: FastAPI + uvicorn
-- **Database**: DuckDB
-- **Infra**: Docker Compose + Nginx
+- **Backend**: FastAPI with uvicorn server
+- **Database**: DuckDB for analytical queries
+- **Infrastructure**: Docker Compose, Nginx reverse proxy
 
-## Data Schema
+## Development
 
-| Table | Columns |
-|-------|---------|
-| merchants | merchant_key (PK), name, created_at |
-| sessions | id (PK), merchant_key, session_status, amount (Rials), adjusted_fee |
-| transactions | id (PK), session_id, status, amount, fee |
-
-## Specifications
-
-This project follows SDD methodology with specifications in `/specs/`:
-
-- **Stage 0**: High-level requirements and architecture
-- **Stage 1**: Detailed component specs and API contracts
-
-See [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) for full details.
-
-## Testing
-
+### Frontend Development
 ```bash
-# Backend
-cd api && pytest tests/
-
-# Frontend
-cd next-app && npm test
+cd frontend
+npm install
+npm run dev
 ```
 
-## License
+### Backend Development
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn api.main:app --reload --port 8000
+```
 
-MIT
+## Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Nginx | 80 | Reverse proxy, load balancer |
+| Frontend | 3000 | Next.js application |
+| Backend | 8000 | FastAPI API server |
+| Adminer | 8080 | Database admin interface (optional) |
+
+## API Endpoints
+
+- `/api/health` - Health check
+- `/api/merchants` - List all merchants
+- `/api/analytics/overview` - Dashboard overview statistics
+- `/api/analytics/merchant/{merchant_key}` - Merchant-specific analytics
+- `/api/sessions` - List payment sessions
+- `/api/sessions/{session_id}` - Get specific session details

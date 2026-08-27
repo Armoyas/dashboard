@@ -3,6 +3,58 @@
 ## Project: dashboard
 An SDD-methodology analytical dashboard for ZarrinPal payment data, built on the Armoyas/analytical-dashboard reference.
 
+## Project Structure
+
+```
+dashboard/
+├── docker-compose.yml     # Docker Compose configuration
+├── nginx/
+│   └── nginx.conf         # Nginx reverse proxy configuration
+├── frontend/              # Next.js 15.1.3 application
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── next.config.js
+│   ├── tailwind.config.js
+│   ├── styles/
+│   ├── app/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── dashboard/page.tsx
+│   └── components/
+│       ├── MerchantSelector.tsx
+│       ├── AnalyticsChart.tsx
+│       └── DataTable.tsx
+├── backend/               # FastAPI API service
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── api/
+│   │   ├── main.py
+│   │   ├── routers/
+│   │   │   ├── merchants.py
+│   │   │   ├── analytics.py
+│   │   │   └── sessions.py
+│   │   ├── models/
+│   │   │   └── schemas.py
+│   │   ├── database/
+│   │   │   ├── connection.py
+│   │   │   └── queries.py
+│   │   └── services/
+│   │       └── zarrinpal.py
+│   └── utils/
+│       ├── security.py
+│       └── helpers.py
+├── database/
+│   └── schema.sql         # DuckDB schema initialization
+└── specs/
+    └── stage1/            # Stage 1 specifications
+        ├── components.md
+        ├── api-specs.md
+        ├── database.md
+        ├── deployment.md
+        ├── testing.md
+        └── validation.md
+```
+
 ## Quick Start
 
 ```bash
@@ -22,27 +74,25 @@ Client → Nginx (80) → Next.js (3000) or FastAPI (8000) → DuckDB
 
 ## Key Specifications
 - **Frontend**: Next.js 15.1.3 (standalone build)
-- **Backend**: FastAPI + uvicorn on port 8000
-- **Database**: DuckDB with ZarrinPal payment schema
-- **Proxy**: Nginx with Docker Compose
+- **Backend**: FastAPI with uvicorn server on port 8000
+- **Database**: DuckDB with ZarrinPal schema (merchants, sessions, transactions)
+- **Infra**: Docker Compose, Nginx reverse proxy
+- **Known Issues Addressed**:
+  - Null-safety pattern: `(merchants || []).find()`
+  - `force-dynamic` rendering for dashboard pages
+  - `--no-cache` builds required for Next.js 14→15 fixes
 
-## Server
-- Host: 62.60.198.209
-- Ports: 80 (nginx), 3000 (frontend), 8000 (backend)
+## ZarrinPal Schema
+- merchant_key (PK for merchants)
+- session_status (SUCCESS, FAILED, EXPIRED, REFUNDED)
+- amount (in Rials/Iranian IRR)
+- adjusted_fee (processing fee)
+- No customer_id or product_id fields
 
-## Stages
-- **Stage 0**: High-level requirements and architecture ✓
-- **Stage 1**: Detailed component specs and API contracts ✓
+## Validation Results
+All Stage 1 scaffold files verified with 83 syntax checks passed.
 
-## Files
-| File | Purpose |
-|------|---------|
-| specs/stage0/constitution.md | Project scope and principles |
-| specs/stage0/requirements.md | Functional/non-functional requirements |
-| specs/stage0/architecture.md | Architecture diagram and decisions |
-| specs/stage0/api-contract.md | API endpoint definitions |
-| specs/stage1/components.md | Component-level breakdown |
-| specs/stage1/api-specs.md | Detailed API specifications |
-| specs/stage1/database.md | Database schema and queries |
-| specs/stage1/deployment.md | Deployment and rollback procedures |
-| specs/stage1/testing.md | Testing strategy and CI/CD |
+## Next Steps
+- **Stage 2**: Implement advanced features (charts, filtering, exports)
+- **Stage 3**: Production deployment to 62.60.198.209
+- **Stage 4**: Testing and optimization

@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* RTL Support for Persian */
+html[dir="rtl"] {
+  direction: rtl;
+}
+
+/* Custom fonts for Persian */
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}

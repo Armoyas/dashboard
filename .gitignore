@@ -1,24 +1,25 @@
-# Dependencies
 node_modules/
-__pycache__/
-*.pyc
-.venv/
-venv/
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-.DS_Store
-
-# Build
 .next/
 dist/
 build/
-
-# Docker
-*.pid
 *.log
-
-# Data
-*.duckdb
+npm-debug.log*
+.DS_Store
+.env.local
+.env.development
+.env.test
+.env.production
+coverage/
+.nyc_output/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.env
+data/*.duckdb
+.idea/
+.vscode/
