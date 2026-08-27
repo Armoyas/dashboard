@@ -1,95 +1,66 @@
-# Stage 1: Validation & Testing Results
+# Stage 1 Validation Results
 
-## Validation Date
-2025-01-16
+## Test Summary
 
-## Validation Summary
+| Test Category | Status | Details |
+|--------------|--------|---------|
+| Frontend Build | ✅ Pass | `npx next build` succeeds, all routes generated |
+| Backend API | ✅ Pass | All 6 endpoints respond correctly |
+| Database Init | ✅ Pass | Schema auto-applied, sample data inserted |
+| YAML Validation | ✅ Pass | docker-compose.yml valid |
+| SQL Validation | ✅ Pass | schema.sql compiles successfully |
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| docker-compose.yml | ✅ Verified | YAML syntax valid, 4 services properly defined |
-| Frontend Dockerfile | ✅ Verified | Node 20 alpine, standalone output, npm install |
-| Frontend package.json | ✅ Verified | Next 15.1.3, TypeScript, TailwindCSS |
-| Frontend next.config.js | ✅ Verified | Standalone output configured |
-| Frontend Tailwind config | ✅ Verified | RTL support, Vazirmatn font |
-| Frontend styles/globals.css | ✅ Verified | Tailwind imports, RTL support |
-| app/layout.tsx | ✅ Verified | RTL lang="fa", root layout |
-| app/page.tsx | ✅ Verified | Landing page with RTL text |
-| app/dashboard/page.tsx | ✅ Verified | force-dynamic, null-safety |
-| components/*.tsx | ✅ Verified | MerchantSelector, AnalyticsChart, DataTable |
-| Backend Dockerfile | ✅ Verified | Python 3.11-slim, uvicorn server |
-| Backend requirements.txt | ✅ Verified | All dependencies listed |
-| api/main.py | ✅ Verified | FastAPI app, routers, health check |
-| api/routers/*.py | ✅ Verified | merchants, analytics, sessions |
-| api/models/schemas.py | ✅ Verified | Pydantic models |
-| api/database/connection.py | ✅ Verified | DuckDB connection management |
-| api/services/zarrinpal.py | ✅ Verified | Currency formatting, status names |
-| api/utils/*.py | ✅ Verified | Security, helpers |
-| nginx/nginx.conf | ✅ Verified | Reverse proxy config |
-| database/schema.sql | ✅ Verified | Full schema with sample data |
-| README.md | ✅ Verified | Updated with full structure |
-| PROJECT_HANDOFF.md | ✅ Verified | Complete documentation |
-| .gitignore | ✅ Verified | Node, Python, Docker ignores |
+## Frontend Build Test
 
-## Static Validation Results
+```bash
+npx next build
+```
 
-**Frontend Validation:**
-- TypeScript syntax: All `.tsx` files parse correctly
-- Null-safety patterns: Applied `(merchants || []).find()` pattern
-- Dynamic rendering: `force-dynamic` applied to dashboard page
-- RTL support: `dir="rtl"` set on html element
+Results:
+- ✅ Compiled successfully
+- ✅ Lint and type checking passed
+- ✅ All static pages generated:
+  - `/` - 3.76 kB
+  - `/_not-found` - 986 B
+  - `/dashboard` - 96.4 kB (Static)
 
-**Backend Validation:**
-- Python syntax: All `.py` files compile without errors
-- Import paths: All modules properly importable
-- Database connection: DuckDB connection with auto-init verified
-- API routes: All endpoints properly registered
-- Business logic: ZarrinPal analytics functions verified
+## Backend API Tests
 
-**Docker Validation:**
-- Docker Compose: YAML parses correctly, services properly defined
-- Dockerfiles: Both frontend and backend use proper syntax
-- Nginx config: Configuration valid
-- Volume mounts: database/ directory mounted at /app/database
+```bash
+DATABASE_PATH=./database/analytics.duckdb SCHEMA_PATH=./database/schema.sql python3 -m pytest
+```
 
-## Runtime Testing Results
+| Endpoint | Status | Output |
+|----------|--------|--------|
+| `GET /` | 200 | API name and version returned |
+| `GET /api/health` | 200 | `{"status": "healthy", ...}` |
+| `GET /api/merchants` | 200 | 2 merchants returned |
+| `GET /api/sessions` | 200 | 3 sessions returned with details |
+| `GET /api/analytics/overview` | 200 | 3 sessions, 66.67% success rate |
+| `GET /api/analytics/merchant/test_merchant_001` | 200 | 100% success rate, 1,250,000 IRR |
 
-**Backend Tests (Direct Python Execution):**
-- ✅ FastAPI app: Successfully started and all endpoints tested
-- ✅ Database auto-init: DuckDB database auto-created with schema
-- ✅ Sample data: 2 merchants, 3 sessions inserted successfully
-- ✅ Analytics queries: Revenue by merchant, daily volume, success rates
-- ✅ API endpoints:
-  - GET / → Returns API version info
-  - GET /api/health → Returns healthy status
-  - GET /api/merchants → Returns 2 merchants
-  - GET /api/analytics/overview → Returns analytics summary
-  - GET /api/analytics/dashboard-metrics → Returns dashboard metrics
-  - GET /api/analytics/merchant/test_merchant_001 → Returns merchant analytics
-  - GET /api/sessions → Returns 3 sessions
+## Database Test
 
-**Docker Build Testing:**
-- ⚠️ Docker daemon: Unable to start in this sandboxed environment (kernel capabilities insufficient)
-- ✅ Dockerfile syntax: Valid
-- ✅ docker-compose.yml: Valid YAML, services properly configured
-- ✅ Image structure: Correct layer order and COPY paths
+| Table | Count | Status |
+|-------|-------|--------|
+| merchants | 2 | ✅ Created and populated |
+| sessions | 3 | ✅ Created and populated |
+| transactions | 2 | ✅ Created and populated |
 
-## Docker Build Fixes Applied
+## Key Fixes Applied
 
-1. **Frontend Dockerfile**: Changed `npm ci` to `npm install` (no package-lock.json was generated)
-2. **Backend Dockerfile**: Removed invalid `COPY ./data` line (data directory was outside build context)
-3. **docker-compose.yml**: Removed broken nginx static mount (`./frontend/public:/usr/share/nginx/html/frontend`)
+1. **Frontend Dockerfile**: Changed `npm ci` → `npm install` (no package-lock.json)
+2. **Frontend**: Added `tsconfig.json` with `@` path alias
+3. **Frontend**: Fixed component imports (default vs named exports)
+4. **Frontend**: Added `'use client'` directives to interactive components
+5. **Frontend**: Fixed CSS import path in layout.tsx
+6. **Frontend**: Converted dashboard page to client-side fetching
+7. **Backend Dockerfile**: Fixed `COPY ./data` → `COPY ./database`
+8. **docker-compose.yml**: Removed invalid nginx static mount, fixed volume path
+9. **Backend**: Added transaction sample data
+10. **Backend**: Removed duplicate EXPOSE/COPY commands
 
-## Integration Points Verified
-- Frontend API calls point to `/api/` paths (proxied by Nginx)
-- Backend serves from port 8000, Nginx proxies `/api/` to backend
-- Database path mounted at `/app/database/analytics.duckdb` in Docker
-- Frontend runs on port 3000 with standalone output
+## Known Issues
 
-## Next Validation Steps
-1. On server with Docker: `docker compose build --no-cache`
-2. Start services: `docker compose up -d`
-3. Verify health endpoint: `curl http://localhost:80/api/health`
-4. Verify frontend: `curl http://localhost:3000/`
-5. Verify merchant data: `curl http://localhost:80/api/merchants`
-6. Verify Swagger docs: `curl http://localhost:80/api/docs`
+- Docker daemon not available in current test environment (kernel restrictions)
+- Docker Compose `version` key is deprecated (warning only, not an error)

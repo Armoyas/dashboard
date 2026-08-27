@@ -71,6 +71,17 @@ def _insert_sample_data() -> None:
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING",
             session
         )
+    # Insert sample transactions
+    sample_transactions = [
+        ('6ba7b810-9dad-11d1-80b4-00c04fd430c8', '6ba7b810-9dad-11d1-80b4-00c04fd430c8', 'SUCCESS', 300000, 9000),
+        ('7c24c921-0a7e-4c5a-9b4d-1a2b3c4d5e6f', 'f47ac10b-58cc-4372-a567-0e02b2c3d479', 'REFUNDED', 750000, 22500),
+    ]
+    for txn in sample_transactions:
+        _connection.execute(
+            "INSERT INTO transactions (id, session_id, status, amount, fee) "
+            "VALUES (?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING",
+            txn
+        )
     _connection.commit()
 
 
