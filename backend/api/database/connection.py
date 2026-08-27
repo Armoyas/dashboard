@@ -48,13 +48,19 @@ def _insert_sample_data() -> None:
             ('test_merchant_002', 'Test Merchant Two')
         ON CONFLICT (merchant_key) DO NOTHING;
     """)
-    _connection.execute("""
-        INSERT INTO sessions (id, merchant_key, session_status, amount, adjusted_fee, authority, email, mobile) VALUES
-            ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'test_merchant_001', 'SUCCESS', 500000, 15000, 'auth123', 'user1@test.com', '09120000001'),
-            ('b2c3d4e5-f6a7-8901-bcde-f1234567890', 'test_merchant_002', 'FAILED', 300000, 9000, 'auth456', 'user2@test.com', '09120000002'),
-            ('c3d4e5f6-a7b8-9012-cdef-12345678901', 'test_merchant_001', 'SUCCESS', 750000, 22500, 'auth789', 'user3@test.com', '09120000003')
-        ON CONFLICT (id) DO NOTHING;
-    """)
+    # DuckDB accepts UUID strings directly in INSERT statements
+    # Use individual INSERTs for each session to avoid multi-row issues
+    sample_sessions = [
+        ('550e8400-e29b-41d4-a716-446655440000', 'test_merchant_001', 'SUCCESS', 500000, 15000, 'auth123', 'user1@test.com', '09120000001'),
+        ('6ba7b810-9dad-11d1-80b4-00c04fd430c8', 'test_merchant_002', 'FAILED', 300000, 9000, 'auth456', 'user2@test.com', '09120000002'),
+        ('f47ac10b-58cc-4372-a567-0e02b2c3d479', 'test_merchant_001', 'SUCCESS', 750000, 22500, 'auth789', 'user3@test.com', '09120000003'),
+    ]
+    for session in sample_sessions:
+        _connection.execute(
+            "INSERT INTO sessions (id, merchant_key, session_status, amount, adjusted_fee, authority, email, mobile) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING",
+            session
+        )
     _connection.commit()
 
 
