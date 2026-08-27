@@ -23,12 +23,36 @@ Nginx (port 80)
 Next.js (port 3000)   FastAPI (port 8000)
   ↓
 DuckDB
+  ← data/sample_data.csv  (input CSV)
 ```
 
 - **Frontend**: Next.js 15.1.3 with standalone build
 - **Backend**: FastAPI with uvicorn server
 - **Database**: DuckDB for analytical queries
+- **Data Source**: CSV input file (`data/sample_data.csv`) loaded into DuckDB on startup
 - **Infrastructure**: Docker Compose, Nginx reverse proxy
+
+## Data Source
+
+The dashboard reads payment transaction data from a CSV file. By default it
+expects the file at `data/sample_data.csv` (mounted into the container at
+`/app/data/sample_data.csv`).
+
+| Column | Description |
+|--------|-------------|
+| `session_key` | Unique session/transaction ID |
+| `merchant_key` | Merchant identifier (e.g. `M1040`) |
+| `amount` | Payment amount in Iranian Rials (IRR) |
+| `adjusted_fee` | Fee indicator |
+| `session_status` | Status: `Verified`, `Failed`, `InBank`, etc. |
+| `created_at` | Timestamp of the payment attempt |
+
+To use your own data, replace `data/sample_data.csv` with your ZarrinPal export
+or mount a different CSV via the `DATA_FILE` environment variable:
+
+```bash
+DATA_FILE=/app/data/your_data.csv docker compose up -d --build
+```
 
 ## Development
 

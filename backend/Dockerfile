@@ -18,6 +18,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code
 COPY ./api /app/api
 
+# Copy the database schema and input CSV data
+COPY ./database/schema.sql /app/database/schema.sql
+COPY ./data /app/data
+
 # Expose port
 EXPOSE 8000
 

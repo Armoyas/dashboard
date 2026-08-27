@@ -35,9 +35,11 @@ services:
     volumes:
       - ./database:/app/database
       - ./database/schema.sql:/app/database/schema.sql
+      - ./data:/app/data
     environment:
       - DATABASE_PATH=/app/database/analytics.duckdb
       - SCHEMA_PATH=/app/database/schema.sql
+      - DATA_FILE=/app/data/sample_data.csv
     restart: unless-stopped
     networks:
       - dashboard-network
