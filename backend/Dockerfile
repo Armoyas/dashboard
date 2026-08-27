@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ./api /app/api
 
 # Copy the database schema
-COPY ./database/schema.sql /app/database/schema.sql
+COPY ../database/schema.sql /app/database/schema.sql
 # Data files (data/*.csv) are mounted at runtime via docker-compose volume ./data:/app/data
 
 # Expose port
