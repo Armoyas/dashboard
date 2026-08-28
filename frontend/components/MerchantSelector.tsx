@@ -1,37 +1,72 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getMerchants } from '@/lib/api';
 
 interface Merchant {
-  merchant_key: string;
+  id: string;
   name: string;
+  merchant_key: string;
 }
 
-interface MerchantSelectorProps {
-  merchants: Merchant[];
-}
+export default function MerchantSelector({ 
+  onSelect, 
+  selectedMerchant 
+}: { 
+  onSelect: (merchant: Merchant | null) => void;
+  selectedMerchant: Merchant | null;
+}) {
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-export default function MerchantSelector({ merchants }: MerchantSelectorProps) {
-  const [selectedMerchant, setSelectedMerchant] = useState<string>('');
+  useEffect(() => {
+    fetchMerchants();
+  }, []);
+
+  const fetchMerchants = async () => {
+    try {
+      setLoading(true);
+      const data = await getMerchants();
+      setMerchants(data);
+    } catch (error) {
+      console.error('Failed to fetch merchants:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelect = (merchant: Merchant) => {
+    setSelected(merchant);
+    setShowDropdown(false);
+  };
 
   return (
-    <div className="mb-6">
-      <label className="block text-sm font-medium mb-2" htmlFor="merchant-select">
-        انتخاب فروشگاه
-      </label>
-      <select
-        id="merchant-select"
-        value={selectedMerchant}
-        onChange={(e) => setSelectedMerchant(e.target.value)}
-        className="w-full p-3 border rounded-lg bg-white"
+    <div className="merchant-selector">
+      <button 
+        onClick={() => setShowDropdown(!showDropdown)}
+        className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm"
       >
-        <option value="">همه فروشگاه‌ها</option>
-        {(merchants || []).map((merchant) => (
-          <option key={merchant.merchant_key} value={merchant.merchant_key}>
-            {merchant.name}
-          </option>
-        ))}
-      </select>
+        {selectedMerchant ? selectedMerchant.name : 'Select Merchant'}
+      </button>
+      
+      {showDropdown && (
+        <div className="absolute mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+          {loading ? (
+            <div className="p-4">Loading...</div>
+          ) : (
+            merchants.map(merchant => (
+              <button
+                key={merchant.id}
+                onClick={() => handleSelect(merchant)}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+              >
+                {merchant.name}
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
