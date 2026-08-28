@@ -1,2 +1,3 @@
-# Sample data CSV - replace with your ZarrinPal export
-# See README.md "Data Source" section for column documentation
+# This directory contains CSV data files for ingestion.
+# Add your CSV files here (e.g., sample_data.csv).
+# The backend will automatically load them on startup.
